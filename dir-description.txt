@@ -1,0 +1,7 @@
+1.git .idea自动生成的目录
+2.bin目录程序运行的目录
+3.docs程序说明目录
+4.models后台目录
+5.node_moudles是node安装的包存放的目录
+6.pbulic前端目录
+7.routes路由代码
