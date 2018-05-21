@@ -26,8 +26,8 @@
 /*商品:*/
 .lt_product{
     width: 100%;
-    padding: 0 10px;
-    position: relative;
+    padding: 0 10px 70px;
+    /*position: relative;*/
 }
 .lt_product .pro_item{
     width: 48%;
@@ -42,6 +42,8 @@
     min-height: 200px;
     box-shadow: 0 0 3px #ddd;
     display: block;
+    text-align: center;
+    padding: 10px 0;
 }
 .lt_product .pro_item .pro_item_box img{
     width: 100%;
