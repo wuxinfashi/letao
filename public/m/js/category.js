@@ -21,6 +21,7 @@ $(function () {
         render($(this).attr('data-id'));
     })
 })
+
 // 获取一级分类的数据
 var getCategory = function (callback) {
     $.ajax({
