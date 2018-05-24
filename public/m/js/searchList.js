@@ -18,18 +18,16 @@ $(function () {
     var $input = $('input').val(urlParams.key|| "")
     // console.log($input)
 
-    // 2.页面初始化的时候,根据关键字,查询第一页数据(一次只查询4条)
-    getSearchData({
-        proName:urlParams.key,
-        page:1,
-        pageSize:4
-    },function (data) {
-        // console.log(data)
-        // 将获取到的数据渲染到页面
-        $(".ct_product").html(template('list',data))
-
-
-    })
+    // // 2.页面初始化的时候,根据关键字,查询第一页数据(一次只查询4条)(在配置了刷新功能后会首次起动的时候加载)
+    // getSearchData({
+    //     proName:urlParams.key,
+    //     page:1,
+    //     pageSize:4
+    // },function (data) {
+    //     // console.log(data)
+    //     // 将获取到的数据渲染到页面
+    //     $(".ct_product").html(template('list',data))
+    // })
 
     // 3.用户点击搜索的时候 根据新的关键字搜索商品 并重置排序
     $('.ct_search a').on('tap',function () {
@@ -86,6 +84,104 @@ $(function () {
         })
     })
 
+    // 5.用户下拉的时候根据当前排序刷新,上拉加载重置
+    mui.init({
+        pullRefresh : {
+            container:"#refreshContainer",//下拉刷新容器标识
+            // 下拉刷新
+            down : {
+                // 最近更新的功能
+                // style:'circle',//必选，下拉刷新样式，目前支持原生5+ ‘circle’ 样式
+                // color:'#2BD009', //可选，默认“#2BD009” 下拉刷新控件颜色
+                // height:'50px',//可选,默认50px.下拉刷新控件的高度,
+                // range:'100px', //可选 默认100px,控件可下拉拖拽的范围
+                // offset:'0px', //可选 默认0px,下拉刷新控件的起始位置
+                auto: true,//可选,默认false.首次加载自动上拉刷新一次
+                callback :function(){//必选，刷新函数，自己来编写，比如通过ajax从服务器获取新数据；
+                    var that = this ;//组件对象
+                    var key = $.trim($input.val())
+                    if(key){
+                        getSearchData({
+                            proName:key,
+                            page:1,
+                            pageSize:4
+                        },function (data) {
+                            // console.log(data)
+                            // 将获取到的数据渲染到页面
+                            $(".ct_product").html(template('list',data))
+                        })
+                    }else {
+                        mui.toast('请输入关键字')
+                        return false
+                    }
+
+                    /*排序功能也重置*/
+                    $('.ct_order a').removeClass('now').find('span').removeClass('fa-angle-up').addClass('fa-angle-down');
+                    getSearchData({
+                        proName: key,
+                        page: 1,
+                        pageSize: 4
+                    }, function (data) {
+                        setTimeout(function () {
+                            /*渲染数据*/
+                            $('.ct_product').html(template('list', data));
+                            /*注意：停止下拉刷新*/
+                            that.endPulldownToRefresh();
+                            /*上拉加载重置*/
+                            that.refresh(true);
+                        }, 300);
+                    });
+                }
+            },
+            // 6.当用户上拉的时候加载下一页(没有数据的情况下就不再进行加载,并告知用户)
+            up : {
+                height:50,//可选.默认50.触发上拉加载拖动距离
+                auto:true,//可选,默认false.自动上拉加载一次
+                contentrefresh : "正在加载...",//可选，正在加载状态时，上拉加载控件上显示的标题内容
+                contentnomore:'没有更多数据了',//可选，请求完毕若没有更多数据时显示的提醒内容；
+                callback :function() {//必选，刷新函数，根据具体业务来编写，比如通过ajax从服务器获取新数据；
+                    // 获取下一页数据,所以page要加1
+                    ++window.page ;
+                    // 根据当前已有的参数不改变来加载更多
+                    /*组件对象*/
+                    var that = this;
+                    var key = $.trim($input.val());
+                    if (!key) {
+                        mui.toast('请输入关键字');
+                        return false;
+                    }
+                    /*获取当前点击的功能参数  price 1 2 num 1 2*/
+                    var order = $('.ct_order a.now').attr('data-order');
+                    var orderVal = $('.ct_order a.now').find('span').hasClass('fa-angle-up') ? 1 : 2;
+                    /*获取数据*/
+                    var params = {
+                        proName: key,
+                        page: window.page,
+                        pageSize: 4
+                        /*排序的方式*/
+                    };
+                    params[order] = orderVal;
+                    getSearchData(params, function (data) {
+                        setTimeout(function () {
+                            /*渲染数据*/
+                            $('.ct_product').append(template('list', data));
+                            /*注意：根据数据的长度判断是否已经没有其他数据了,如果是则停止上拉加载*/
+                            if(data.data.length){
+                                that.endPullupToRefresh();
+                            }else{
+                                that.endPullupToRefresh(true);
+                            }
+                        }, 300);
+                    });
+
+                }
+            }
+
+
+
+
+        }
+    });
 
 
 
